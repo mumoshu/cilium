@@ -634,9 +634,9 @@ reList:
 			listSignalSent = true
 		}
 
-	recreateWatcher:
 		lastRev++
 
+	recreateWatcher:
 		scopedLog.WithField(fieldRev, lastRev).Debug("Starting to watch a prefix")
 		etcdWatch := e.client.Watch(ctx.Background(), w.prefix,
 			client.WithPrefix(), client.WithRev(lastRev))
@@ -648,6 +648,7 @@ reList:
 
 			case r, ok := <-etcdWatch:
 				if !ok {
+					time.Sleep(50 * time.Millisecond)
 					goto recreateWatcher
 				}
 
