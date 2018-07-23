@@ -14,6 +14,10 @@
 
 package kvstore
 
+import (
+	"sync"
+)
+
 // EventType defines the type of watch event that occurred
 type EventType int
 
@@ -75,16 +79,21 @@ type Watcher struct {
 	prefix    string
 	stopWatch stopChan
 
-	stopped bool
+	stopped  bool
+	stopWait sync.WaitGroup
 }
 
 func newWatcher(name, prefix string, chanSize int) *Watcher {
-	return &Watcher{
+	w := &Watcher{
 		name:      name,
 		prefix:    prefix,
 		Events:    make(EventChan, chanSize),
 		stopWatch: make(stopChan, 0),
 	}
+
+	w.stopWait.Add(1)
+
+	return w
 }
 
 // String returns the name of the wather
@@ -114,4 +123,5 @@ func (w *Watcher) Stop() {
 	close(w.stopWatch)
 	log.WithField(fieldWatcher, w).Debug("Stopped watcher...")
 	w.stopped = true
+	w.stopWait.Wait()
 }
